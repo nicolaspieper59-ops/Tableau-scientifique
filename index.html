@@ -1,6 +1,109 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <meta charset="UTF-8">
+  <title>Niveau à bulle GPS</title>
+  <style>
+    body {
+      background: radial-gradient(circle at center, #e0f7fa, #b2ebf2);
+      font-family: 'Share Tech Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    #bubble-level {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      position: relative;
+      background: radial-gradient(circle at center, #ffffff 0%, #b2ebf2 100%);
+      overflow: hidden;
+    }
+
+    #bubble {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #00BCD4;
+      position: absolute;
+      top: 90px;
+      left: 90px;
+      transition: transform 0.1s ease-out;
+      box-shadow: 0 0 10px #00ACC1;
+    }
+
+    #angle-display {
+      margin-top: 20px;
+      font-size: 1.5em;
+      color: #00796B;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="bubble-level">
+    <div id="bubble"></div>
+  </div>
+  <div id="angle-display">Inclinaison GPS : 0.0000°</div>
+
+  <script>
+    let lastPosition = null;
+
+    function toRadians(deg) {
+      return deg * Math.PI / 180;
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371000; // Rayon terrestre en mètres
+      const dLat = toRadians(lat2 - lat1);
+      const dLon = toRadians(lon2 - lon1);
+      const a = Math.sin(dLat/2)**2 +
+                Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+                Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function updateBubbleLevel(position) {
+      const { latitude, longitude, altitude } = position.coords;
+
+      if (lastPosition) {
+        const dx = haversine(lastPosition.lat, lastPosition.lon, latitude, longitude);
+        const dz = altitude - lastPosition.alt;
+        const angle = Math.atan2(dz, dx) * 180 / Math.PI;
+
+        const sensitivity = 2; // 1° = 2 pixels
+        const offsetY = -angle * sensitivity;
+
+        document.getElementById('bubble').style.transform = `translate(0px, ${offsetY}px)`;
+        document.getElementById('angle-display').textContent =
+          `Inclinaison GPS : ${angle.toFixed(4)}°`;
+      }
+
+      lastPosition = { lat: latitude, lon: longitude, alt: altitude };
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(updateBubbleLevel, console.error, {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 5000
+      });
+    } else {
+      document.getElementById('angle-display').textContent = "GPS non disponible";
+    }
+  </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MultiTool Scientifique</title>
