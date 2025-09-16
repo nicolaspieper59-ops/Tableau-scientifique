@@ -1,192 +1,272 @@
-let watchId = null;
-let tracking = false;
-let positions = [];
-let lastPos = null;
-let startTime = null;
+// Localisation par défaut (Montpellier)
+let lat = 43.6119, lon = 3.8777;
 
-// --- Activer/désactiver la vitesse ---
-function toggleSpeed() {
-  if (!tracking) {
-    if (navigator.geolocation) {
-      startTime = Date.now();
-      positions = [];
-      watchId = navigator.geolocation.watchPosition(updatePosition, geoError, {
-        enableHighAccuracy: true,
-        maximumAge: 1000
-      });
-      tracking = true;
-    } else {
-      alert("GPS non supporté");
-    }
-  } else {
-    navigator.geolocation.clearWatch(watchId);
-    tracking = false;
-  }
+// Utilitaires
+const rad = d => d * Math.PI / 180;
+const deg = r => r * 180 / Math.PI;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const pad2 = n => String(n).padStart(2, '0');
+const haversine = (la1, lo1, la2, lo2) => {
+  const R = 6371000, dLa = rad(la2 - la1), dLo = rad(lo2 - lo1);
+  const a = Math.sin(dLa/2)**2 + Math.cos(rad(la1))*Math.cos(rad(la2))*Math.sin(dLo/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+};
+const bearingTo = (la1, lo1, la2, lo2) => {
+  const y = Math.sin(rad(lo2-lo1)) * Math.cos(rad(la2));
+  const x = Math.cos(rad(la1))*Math.sin(rad(la2)) - Math.sin(rad(la1))*Math.cos(rad(la2))*Math.cos(rad(lo2-lo1));
+  return (deg(Math.atan2(y, x)) + 360) % 360;
+};
+
+// --- Soleil & Lune (SunCalc local) ---
+function equationOfTime(date) {
+  const N = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(date.getFullYear(),0,0)) / 86400000);
+  const B = 2 * Math.PI * (N - 81) / 364;
+  // minutes (approximation classique)
+  return 9.87 * Math.sin(2*B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
 }
-
-// --- Mise à jour position ---
-function updatePosition(pos) {
-  lastPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-
-  const speedMS = pos.coords.speed || 0;
-  const speedKMH = speedMS * 3.6;
-  const acc = pos.coords.accuracy;
-
-  // Ajout historique
-  if (positions.length === 0) positions.push({ ...pos.coords, t: Date.now() });
-  else {
-    let last = positions[positions.length - 1];
-    let d = distance(last.latitude, last.longitude, pos.coords.latitude, pos.coords.longitude);
-    let dt = (Date.now() - last.t) / 1000;
-    if (d > 0.5) {
-      positions.push({ ...pos.coords, t: Date.now() });
-    }
-  }
-
-  // Distance + durée
-  let dist = 0;
-  for (let i = 1; i < positions.length; i++) {
-    dist += distance(
-      positions[i - 1].latitude,
-      positions[i - 1].longitude,
-      positions[i].latitude,
-      positions[i].longitude
-    );
-  }
-  const dur = (Date.now() - startTime) / 1000;
-
-  // Moyenne
-  let avg = dist / dur * 3.6;
-
-  // Lumière et son en %
-  const pctLight = (speedKMH / 1079252848 * 100).toFixed(6); // % vitesse lumière
-  const pctSound = (speedMS / 343 * 100).toFixed(3); // % vitesse son
-
-  document.getElementById("speed").textContent = speedKMH.toFixed(3);
-  document.getElementById("avgSpeed").textContent = avg.toFixed(3);
-  document.getElementById("distance").textContent = dist.toFixed(1);
-  document.getElementById("duration").textContent = dur.toFixed(0);
-  document.getElementById("lightPct").textContent = pctLight;
-  document.getElementById("soundPct").textContent = pctSound;
-
-  updateSunMoon();
-}
-
-// --- Erreur GPS ---
-function geoError(err) {
-  console.error("Erreur GPS:", err.message);
-}
-
-// --- Distance haversine ---
-function distance(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) ** 2;
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-}
-
-// --- Soleil & Lune ---
 function updateSunMoon() {
-  if (!lastPos) return;
-  const times = SunCalc.getTimes(new Date(), lastPos.lat, lastPos.lon);
+  if (typeof SunCalc === 'undefined') return;
 
-  document.getElementById("sunrise").textContent = times.sunrise.toLocaleTimeString();
-  document.getElementById("sunset").textContent = times.sunset.toLocaleTimeString();
-  document.getElementById("sunNoon").textContent = times.solarNoon.toLocaleTimeString();
+  const now = new Date();
+  const sunTimes = SunCalc.getTimes(now, lat, lon);
+  const moonTimes = SunCalc.getMoonTimes(now, lat, lon);
+  const moonIllum = SunCalc.getMoonIllumination(now);
 
-  // Équation du temps simplifiée
-  const JD = Date.now() / 86400000 + 2440587.5;
-  const n = JD - 2451545.0;
-  const L = 280.46 + 0.9856474 * n;
-  const g = 357.528 + 0.9856003 * n;
-  const eqTime = -1 * (1.914 * Math.sin(g * Math.PI / 180) - 0.02 * Math.sin(2 * g * Math.PI / 180)
-    + 2.466 * Math.sin(2 * L * Math.PI / 180) - 0.053 * Math.sin(4 * L * Math.PI / 180));
+  const eotMin = equationOfTime(now);
+  const tzOffsetMin = -now.getTimezoneOffset(); // minutes
+  const LSTM = 15 * Math.round(tzOffsetMin / 60); // longitude standard approx.
+  const TC = 4 * (lon - LSTM) + eotMin; // minutes
+  const localSolarTime = new Date(now.getTime() + TC * 60000);
 
-  document.getElementById("eqTime").textContent = eqTime.toFixed(2);
+  const setText = (id, val) => document.getElementById(id).textContent = val;
 
-  const solarTime = new Date();
-  solarTime.setMinutes(solarTime.getMinutes() + eqTime);
-  document.getElementById("solarTrue").textContent = solarTime.toLocaleTimeString();
-  document.getElementById("solarMean").textContent = new Date().toLocaleTimeString();
+  setText('sunNoon', sunTimes.solarNoon ? sunTimes.solarNoon.toLocaleTimeString() : '--');
+  setText('solarTrue', localSolarTime.toLocaleTimeString());
+  setText('solarMean', '12:00');
+  setText('eqTime', `${eotMin >= 0 ? '+' : ''}${eotMin.toFixed(1)} min`);
 
-  // Lune
-  const moonPos = SunCalc.getMoonPosition(new Date(), lastPos.lat, lastPos.lon);
-  const moonIllum = SunCalc.getMoonIllumination(new Date());
-  document.getElementById("moonPhase").textContent = (moonIllum.phase * 100).toFixed(1);
-  document.getElementById("moonMag").textContent = moonIllum.fraction.toFixed(2);
-  const moonTimes = SunCalc.getMoonTimes(new Date(), lastPos.lat, lastPos.lon);
-  document.getElementById("moonrise").textContent = moonTimes.rise ? moonTimes.rise.toLocaleTimeString() : "-";
-  document.getElementById("moonset").textContent = moonTimes.set ? moonTimes.set.toLocaleTimeString() : "-";
-  document.getElementById("moonTransit").textContent = moonPos.alt.toFixed(2) + " rad";
+  setText('moonPhase', (moonIllum.fraction * 100).toFixed(1));
+  setText('moonMag', '--'); // pas d’échelle standard utilisable hors-ligne
+  setText('moonrise', moonTimes.rise ? moonTimes.rise.toLocaleTimeString() : '--');
+  setText('moonset', moonTimes.set ? moonTimes.set.toLocaleTimeString() : '--');
+  setText('moonTransit', '--'); // SunCalc ne fournit pas le transit lunaire
 }
 
 // --- Horloge Minecraft ---
-function updateMCClock() {
+function drawMcClock(ctx, w, h, hours, minutes, seconds) {
+  const cx = w/2, cy = h/2, r = Math.min(cx, cy) - 6;
+  ctx.clearRect(0,0,w,h);
+  // fond
+  const grad = ctx.createRadialGradient(cx, cy, 6, cx, cy, r);
+  grad.addColorStop(0, '#333'); grad.addColorStop(1, '#111');
+  ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.fill();
+  // ticks
+  ctx.strokeStyle = '#666'; ctx.lineWidth = 2;
+  for (let i=0;i<60;i++){
+    const a = i * Math.PI/30;
+    const rr1 = i%5===0 ? r-10 : r-5, rr2 = r-2;
+    ctx.beginPath();
+    ctx.moveTo(cx + rr1*Math.sin(a), cy - rr1*Math.cos(a));
+    ctx.lineTo(cx + rr2*Math.sin(a), cy - rr2*Math.cos(a));
+    ctx.stroke();
+  }
+  // aiguilles
+  const ah = ((hours%12) + minutes/60) * Math.PI/6;
+  const am = (minutes + seconds/60) * Math.PI/30;
+  const as = seconds * Math.PI/30;
+  ctx.strokeStyle = '#81D4FA'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx + (r-28)*Math.sin(ah), cy - (r-28)*Math.cos(ah)); ctx.stroke();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx + (r-18)*Math.sin(am), cy - (r-18)*Math.cos(am)); ctx.stroke();
+  ctx.strokeStyle = '#ff5252'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx + (r-12)*Math.sin(as), cy - (r-12)*Math.cos(as)); ctx.stroke();
+}
+function updateMcClock() {
   const now = new Date();
-  const mcDayFraction = ((now.getUTCHours() * 3600 + now.getUTCMinutes() * 60 + now.getUTCSeconds()) % 86400) / 86400;
-  const hours = Math.floor(mcDayFraction * 24);
-  const minutes = Math.floor((mcDayFraction * 24 - hours) * 60);
-  const seconds = Math.floor(((mcDayFraction * 24 - hours) * 60 - minutes) * 60);
-
-  document.getElementById("mcHour").textContent = hours.toString().padStart(2, "0");
-  document.getElementById("mcMinute").textContent = minutes.toString().padStart(2, "0");
-  document.getElementById("mcSecond").textContent = seconds.toString().padStart(2, "0");
+  const mcMillis = (now.getTime() % 86400000) * 72;
+  const mc = new Date(mcMillis);
+  const h = mc.getUTCHours(), m = mc.getUTCMinutes(), s = mc.getUTCSeconds();
+  document.getElementById('mcHour').textContent = pad2(h);
+  document.getElementById('mcMinute').textContent = pad2(m);
+  document.getElementById('mcSecond').textContent = pad2(s);
+  const canvas = document.getElementById('mcClock');
+  const ctx = canvas.getContext('2d');
+  drawMcClock(ctx, canvas.width, canvas.height, h, m, s);
 }
-setInterval(updateMCClock, 1000);
 
-// --- Météo simulée ---
+// --- Météo (simulation offline) ---
 function updateWeather() {
-  document.getElementById("temp").textContent = (20 + Math.random() * 5).toFixed(1);
-  document.getElementById("pressure").textContent = (1010 + Math.random() * 10).toFixed(1);
-  document.getElementById("humidity").textContent = (50 + Math.random() * 20).toFixed(0);
-  document.getElementById("wind").textContent = (5 + Math.random() * 10).toFixed(1);
-  document.getElementById("clouds").textContent = (10 + Math.random() * 90).toFixed(0);
-  document.getElementById("rain").textContent = (0 + Math.random() * 5).toFixed(1);
-  document.getElementById("snow").textContent = (0 + Math.random() * 3).toFixed(1);
-  document.getElementById("uv").textContent = (1 + Math.random() * 10).toFixed(0);
-  document.getElementById("airQuality").textContent = (50 + Math.random() * 50).toFixed(0);
-  document.getElementById("boilPoint").textContent = 100;
-}
-setInterval(updateWeather, 15000);
+  // Variation douce diurne
+  const t = Date.now()/1000;
+  const temp = 20 + 7*Math.sin((t/3600) * Math.PI/12);
+  const press = 1013 + 2*Math.sin((t/3600) * Math.PI/6);
+  const hum = clamp(60 + 20*Math.cos((t/3600) * Math.PI/12), 20, 100);
+  const wind = clamp(10 + 6*Math.sin((t/1800) * Math.PI/6), 0, 60);
+  const clouds = Math.floor(clamp(50 + 40*Math.sin((t/2700) * Math.PI/8), 0, 100));
+  const rain = Math.max(0, (Math.sin(t/900)+1)/2 - 0.7) * 10;
+  const snow = Math.max(0, 2 - temp/10); // pseudo
+  const uv = clamp(6*Math.max(0, Math.sin((t/3600 - 6) * Math.PI/12)), 0, 11);
+  const aqi = Math.floor(clamp(50 + 30*Math.sin(t/4000), 0, 300));
+  const boil = 100 - 0.03*(press-1013);
 
-// --- Inclinomètre ---
-window.addEventListener("deviceorientation", e => {
-  const tilt = e.gamma ? e.gamma.toFixed(1) : 0;
-  document.getElementById("tilt").textContent = tilt;
-});
-
-// --- Lumière ---
-if ("AmbientLightSensor" in window) {
-  try {
-    const sensor = new AmbientLightSensor();
-    sensor.addEventListener("reading", () => {
-      document.getElementById("lux").textContent = sensor.illuminance.toFixed(1);
-    });
-    sensor.start();
-  } catch (err) { console.log("Capteur lumière non dispo", err); }
+  const set = (id, v) => document.getElementById(id).textContent = (typeof v === 'number') ? v.toFixed(1) : v;
+  set('temp', temp); set('pressure', press); set('humidity', hum);
+  set('wind', wind); set('clouds', clouds); set('rain', rain);
+  set('snow', snow); set('uv', uv); set('airQuality', aqi); set('boilPoint', boil);
 }
 
-// --- Son ---
-if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const analyser = audioCtx.createAnalyser();
-    const mic = audioCtx.createMediaStreamSource(stream);
-    mic.connect(analyser);
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+// --- Boussole / destination ---
+let currentHeading = null;
+function deviceOrientationHandler(e) {
+  // alpha (0-360) = rotation autour de l’axe Z (compas approximatif)
+  const a = e.alpha;
+  if (a != null) {
+    currentHeading = (360 - a) % 360; // transformer en cap “vers le Nord = 0”
+    document.getElementById('heading').textContent = currentHeading.toFixed(0);
+  }
+}
+function initCompass() {
+  if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // iOS: besoin d’interaction utilisateur; proposer via “Aller”
+    document.getElementById('goDest').addEventListener('click', async () => {
+      try { await DeviceOrientationEvent.requestPermission(); } catch {}
+    }, { once: true });
+  }
+  window.addEventListener('deviceorientation', deviceOrientationHandler, false);
+}
+function updateBearingUI() {
+  const dLat = parseFloat(document.getElementById('destLat').value);
+  const dLon = parseFloat(document.getElementById('destLon').value);
+  if (isFinite(dLat) && isFinite(dLon)) {
+    const b = bearingTo(lat, lon, dLat, dLon);
+    document.getElementById('bearing').textContent = b.toFixed(0);
+  }
+}
+document.getElementById('goDest').addEventListener('click', updateBearingUI);
 
-    function updateSound() {
-      analyser.getByteFrequencyData(dataArray);
-      let values = 0;
-      for (let i = 0; i < dataArray.length; i++) values += dataArray[i];
-      let average = values / dataArray.length;
-      let db = 20 * Math.log10(average / 255);
-      document.getElementById("db").textContent = db.toFixed(1);
-      requestAnimationFrame(updateSound);
+// --- Capteurs : niveau à bulle, lumière, son (tous offline) ---
+let tiltEMA = 0;
+function deviceMotionHandler(e) {
+  // Basé sur beta/gamma pour un “niveau” approximatif
+  const beta = e.beta || 0;   // inclinaison avant/arrière
+  const gamma = e.gamma || 0; // inclinaison gauche/droite
+  const angle = Math.sqrt(beta*beta + gamma*gamma); // magnitude en °
+  tiltEMA = 0.9*tiltEMA + 0.1*angle;
+  document.getElementById('tilt').textContent = tiltEMA.toFixed(1);
+}
+function initTilt() {
+  if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') {
+    document.body.addEventListener('click', async () => {
+      try { await DeviceMotionEvent.requestPermission(); } catch {}
+    }, { once: true });
+  }
+  window.addEventListener('deviceorientation', deviceMotionHandler, false);
+}
+
+// Lumière: AmbientLightSensor si présent, sinon simulation par soleil
+function initLight() {
+  const setLux = v => {
+    document.getElementById('lux').textContent = v.toFixed(0);
+    const pct = clamp((Math.log10(v+1) / 4) * 100, 0, 100);
+    document.getElementById('lightPct').textContent = pct.toFixed(0);
+  };
+  if ('AmbientLightSensor' in window) {
+    try {
+      const sensor = new AmbientLightSensor();
+      sensor.addEventListener('reading', () => setLux(sensor.illuminance || 0));
+      sensor.start();
+      return;
+    } catch {}
+  }
+  // fallback simulation via élévation solaire
+  setInterval(() => {
+    if (typeof SunCalc !== 'undefined') {
+      const sunPos = SunCalc.getPosition(new Date(), lat, lon);
+      const elevation = sunPos.altitude; // radians
+      const lux = Math.max(0, 100000 * Math.max(0, Math.sin(elevation)));
+      setLux(lux);
+    } else {
+      setLux(300); // constant fallback
     }
-    updateSound();
-  }).catch(err => console.log("Micro refusé", err));
+  }, 2000);
 }
+
+// Son: sans micro (offline sans permission), on simule une ambiance
+function initSound() {
+  // Si tu veux le micro: navigator.mediaDevices.getUserMedia({audio:true}) puis analyser.
+  // Ici: simulation douce
+  setInterval(() => {
+    const t = Date.now()/1000;
+    const db = 40 + 5*Math.sin(t/5) + 2*Math.sin(t/0.7);
+    document.getElementById('db').textContent = db.toFixed(1);
+    const pct = clamp((db - 30) / (90 - 30) * 100, 0, 100);
+    document.getElementById('soundPct').textContent = pct.toFixed(0);
+  }, 500);
+}
+
+// --- Vitesse / distance: GPS si dispo, sinon simulation ---
+let speedOn = false;
+let lastFix = null, distanceM = 0, startTime = null, avgSpeed = 0;
+function toggleSpeed() { speedOn = !speedOn; if (speedOn && !startTime) startTime = Date.now(); }
+document.getElementById('speedToggle').addEventListener('click', toggleSpeed);
+
+function initSpeed() {
+  if ('geolocation' in navigator) {
+    navigator.geolocation.watchPosition(pos => {
+      lat = pos.coords.latitude; lon = pos.coords.longitude;
+      if (!speedOn) return;
+      const now = Date.now();
+      const sp = pos.coords.speed != null ? pos.coords.speed : null; // m/s
+      if (lastFix) {
+        const dt = (now - lastFix.t) / 1000;
+        const d = haversine(lastFix.lat, lastFix.lon, lat, lon);
+        if (d < 1000) distanceM += d; // filtre simple
+        const v = sp != null ? sp : d / dt; // m/s
+        const kh = v * 3.6;
+        document.getElementById('speed').textContent = kh.toFixed(1);
+      }
+      lastFix = { lat, lon, t: now };
+      if (startTime) {
+        const dur = Math.max(1, (now - startTime)/1000);
+        avgSpeed = (distanceM / dur) * 3.6;
+        document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(1);
+        document.getElementById('distance').textContent = distanceM.toFixed(0);
+        document.getElementById('duration').textContent = Math.floor(dur);
+      }
+    }, () => {/* ignore erreurs offline */}, { enableHighAccuracy:true, maximumAge:2000, timeout:5000 });
+  } else {
+    // Simulation si pas de GPS
+    setInterval(() => {
+      if (!speedOn) return;
+      const now = Date.now();
+      if (!startTime) startTime = now;
+      const t = (now - startTime)/1000;
+      const v = Math.max(0, 5 + 3*Math.sin(t/10)); // m/s
+      distanceM += v;
+      const dur = t;
+      avgSpeed = (distanceM / dur) * 3.6;
+      document.getElementById('speed').textContent = (v*3.6).toFixed(1);
+      document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(1);
+      document.getElementById('distance').textContent = distanceM.toFixed(0);
+      document.getElementById('duration').textContent = Math.floor(dur);
+    }, 1000);
+  }
+}
+
+// --- Boucle d’update régulière ---
+function tick() {
+  updateSunMoon();
+  updateMcClock();
+  updateWeather();
+  // heading et cap vers destination sont mis à jour par événements + bouton
+  requestAnimationFrame(tick);
+}
+
+// Init
+initCompass();
+initTilt();
+initLight();
+initSound();
+initSpeed();
+tick();
+                                                                                                 
