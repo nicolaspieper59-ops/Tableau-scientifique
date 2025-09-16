@@ -1,4 +1,4 @@
-const CACHE = 'multitool-offline-v1';
+const CACHE = 'multitool-cache-v2';
 const ASSETS = [
   './',
   './index.html',
