@@ -302,6 +302,11 @@ function initSpeed() {
   }
 }
 
+setInterval(() => {
+  if (!gpsAvailable || !speedOn) return;
+  // Les données sont mises à jour uniquement via GPS
+}, 1000);
+
 // --- Boucle d’update régulière ---
 function tick() {
   updateSunMoon();
