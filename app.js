@@ -1,6 +1,10 @@
 // Localisation par défaut (Montpellier)
 let lat = 43.6119, lon = 3.8777;
 
+let maxSpeed = 0;
+let gpsAvailable = false;
+
+
 // Utilitaires
 const rad = d => d * Math.PI / 180;
 const deg = r => r * 180 / Math.PI;
