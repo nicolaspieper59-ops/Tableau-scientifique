@@ -1,109 +1,102 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MultiTool Scientifique</title>
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css">
-<script src="js/suncalc.js"></script>
-<script src="sw-register.js"></script>
-<style>
-/* Garde ta charte inline si tu veux. Le gros est dans style.css */
-body { font-family: Arial,sans-serif; margin:0; padding:0; background:#111; color:#eee; }
-header { background:#0066cc; color:white; padding:12px; text-align:center; }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; padding:12px; }
-.card { background:#222; padding:12px; border-radius:12px; box-shadow:0 0 8px #000; }
-.card h2 { font-size:18px; margin:0 0 10px; display:flex; align-items:center; }
-.card h2 i { margin-right:6px; vertical-align: middle; transform: translateY(-2px); }
-button { background:#0066cc; border:none; color:white; padding:6px 12px; border-radius:6px; cursor:pointer; margin-top:6px; }
-.digital { font-size:20px; margin-top:5px; text-align:center; }
-input { width:80px; background:#333; color:#fff; border:none; padding:2px 4px; border-radius:4px; }
-canvas { display:block; margin:0 auto; }
-.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
-.small { opacity:.8; font-size:12px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiTool Scientifique</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <script src="js/suncalc.js"></script>
+  <script src="sw-register.js"></script>
 </head>
 <body>
-<header>
-  <h1>MultiTool Scientifique 🚀</h1>
-</header>
+  <header>
+    <h1>MultiTool Scientifique 🚀</h1>
+  </header>
 
-<div class="grid">
+  <div class="grid">
 
-  <!-- Vitesse -->
-  <div class="card">
-    <h2>⚡ Vitesse</h2>
-    <p>Instantanée : <span id="speed">0</span> km/h</p>
-    <p>Moyenne : <span id="avgSpeed">0</span> km/h</p>
-    <p>Vitesse max : <span id="maxSpeed">0</span> km/h</p    
-    <p>Distance : <span id="distance">0</span> m</p>
-    <p>Temps : <span id="duration">0</span> s</p>
-    <p>% Lumière : <span id="lightPct">0</span>%</p>
-    <p>% Son : <span id="soundPct">0</span>%</p>
-    <button id="speedToggle">Marche/Arrêt</button>
+    <!-- Carte Vitesse -->
+    <div class="card">
+      <h2>⚡ Vitesse</h2>
+      <p>Instantanée : <span id="speed">0</span> km/h</p>
+      <p>Moyenne : <span id="avgSpeed">0</span> km/h</p>
+      <p>Distance : <span id="distance">0</span> m</p>
+      <p>Temps : <span id="duration">0</span> s</p>
+      <p>Vitesse max : <span id="maxSpeed">0</span> km/h</p>
+      <p>% Lumière : <span id="lightPct">0</span>%</p>
+      <p>% Son : <span id="soundPct">0</span>%</p>
+      <p>Précision GPS : <span id="gpsQuality">--</span>%</p>
+      <button id="speedToggle">Marche/Arrêt</button>
+      <button id="resetMaxSpeed">Réinitialiser max</button>
+    </div>
+
+    <!-- Soleil & Lune -->
+    <div class="card">
+      <h2>☀️🌙 Soleil & Lune</h2>
+      <p>Culmination soleil : <span id="sunNoon">--</span></p>
+      <p>Heure solaire vraie : <span id="solarTrue">--</span></p>
+      <p>Heure solaire moyenne : <span id="solarMean">--</span></p>
+      <p>Équation du temps : <span id="eqTime">--</span></p>
+      <p>Lune phase : <span id="moonPhase">--</span>%</p>
+      <p>Lune magnitude : <span id="moonMag">--</span></p>
+      <p>Lever lune : <span id="moonrise">--</span></p>
+      <p>Coucher lune : <span id="moonset">--</span></p>
+      <p>Culmination lune : <span id="moonTransit">--</span></p>
+    </div>
+
+    <!-- Horloge Minecraft -->
+    <div class="card">
+      <h2>⏰ Horloge Minecraft</h2>
+      <canvas id="mcClock" width="140" height="140"></canvas>
+      <div class="digital"><span id="mcHour">00</span>:<span id="mcMinute">00</span>:<span id="mcSecond">00</span></div>
+    </div>
+
+    <!-- Météo -->
+    <div class="card" id="weather-data">
+      <h2>🌡️ Météo</h2>
+      <p>Température : <span id="temp">--</span> °C</p>
+      <p>Pression : <span id="pressure">--</span> hPa</p>
+      <p>Humidité : <span id="humidity">--</span>%</p>
+      <p>Vent : <span id="wind">--</span> km/h</p>
+      <p>Nuages : <span id="clouds">--</span>%</p>
+      <p>Pluie : <span id="rain">--</span> mm</p>
+      <p>Neige : <span id="snow">--</span> mm</p>
+      <p>Indice UV : <span id="uv">--</span></p>
+      <p>Qualité air : <span id="airQuality">--</span></p>
+      <p>Point d’ébullition : <span id="boilPoint">--</span> °C</p>
+    </div>
+
+    <!-- Boussole -->
+    <div class="card" id="gps-data">
+      <h2>🧭 Boussole</h2>
+      <p>Cap : <span id="heading">--</span>°</p>
+      <p>Vers lat : <input id="destLat" type="number" step="0.0001" placeholder="43.6119"></p>
+      <p>Vers lon : <input id="destLon" type="number" step="0.0001" placeholder="3.8777"></p>
+      <p>Cap vers destination : <span id="bearing">--</span>°</p>
+      <button id="goDest">Aller</button>
+    </div>
+
+    <!-- Capteurs -->
+    <div class="card" id="sensor-data">
+      <h2>📐 Capteurs</h2>
+      <p>Niveau à bulle : <span id="tilt">--</span>°</p>
+      <p>Lumière : <span id="lux">--</span> lux</p>
+      <p>Son : <span id="db">--</span> dB</p>
+    </div>
+
+    <!-- Paramètres -->
+    <div class="card">
+      <h2>⚙️ Paramètres</h2>
+      <label><input type="checkbox" id="toggleGradient"> Gradient cosmique</label>
+      <label><input type="checkbox" id="toggleWeather"> Météo simulée</label>
+      <label><input type="checkbox" id="toggleCompass"> Boussole</label>
+      <label><input type="checkbox" id="toggleSensors"> Capteurs</label>
+    </div>
+
   </div>
 
-  <!-- Soleil & Lune -->
-  <div class="card">
-    <h2>☀️🌙 Soleil & Lune</h2>
-    <p>Culmination soleil : <span id="sunNoon">--</span></p>
-    <p>Heure solaire vraie : <span id="solarTrue">--</span></p>
-    <p>Heure solaire moyenne : <span id="solarMean">--</span></p>
-    <p>Équation du temps : <span id="eqTime">--</span></p>
-    <p>Lune phase : <span id="moonPhase">--</span>%</p>
-    <p>Lune magnitude : <span id="moonMag">--</span></p>
-    <p>Lever lune : <span id="moonrise">--</span></p>
-    <p>Coucher lune : <span id="moonset">--</span></p>
-    <p>Culmination lune : <span id="moonTransit">--</span></p>
-  </div>
-
-  <!-- Horloge Minecraft -->
-  <div class="card">
-    <h2>⏰ Horloge Minecraft</h2>
-    <canvas id="mcClock" width="140" height="140"></canvas>
-    <div class="digital mono"><span id="mcHour">00</span>:<span id="mcMinute">00</span>:<span id="mcSecond">00</span></div>
-  </div>
-
-  <!-- Météo (simulée) -->
-  <div class="card">
-    <h2>🌡️ Météo</h2>
-    <p>Température : <span id="temp">--</span> °C</p>
-    <p>Pression : <span id="pressure">--</span> hPa</p>
-    <p>Humidité : <span id="humidity">--</span>%</p>
-    <p>Vent : <span id="wind">--</span> km/h</p>
-    <p>Nuages : <span id="clouds">--</span>%</p>
-    <p>Pluie : <span id="rain">--</span> mm</p>
-    <p>Neige : <span id="snow">--</span> mm</p>
-    <p>Indice UV : <span id="uv">--</span></p>
-    <p>Qualité air : <span id="airQuality">--</span></p>
-    <p>Point d’ébullition : <span id="boilPoint">--</span> °C</p>
-    <div class="small">Données locales simulées (aucun réseau)</div>
-  </div>
-
-  <!-- Boussole -->
-  <div class="card">
-    <h2>🧭 Boussole</h2>
-    <p>Cap : <span id="heading">--</span>°</p>
-    <p>Vers lat : <input id="destLat" type="number" step="0.0001" placeholder="43.6119"></p>
-    <p>Vers lon : <input id="destLon" type="number" step="0.0001" placeholder="3.8777"></p>
-    <p>Cap vers destination : <span id="bearing">--</span>°</p>
-    <button id="goDest">Aller</button>
-    <div class="small">Utilise l’orientation de l’appareil si disponible</div>
-  </div>
-
-  <!-- Capteurs -->
-  <div class="card">
-    <h2>📐 Capteurs</h2>
-    <p>Niveau à bulle : <span id="tilt">--</span>°</p>
-    <p>Lumière : <span id="lux">--</span> lux</p>
-    <p>Son : <span id="db">--</span> dB</p>
-    <div class="small">Simulé si capteurs indisponibles</div>
-  </div>
-
-</div>
-
-<script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
-  </html>
-      
+                            </html>
+  
