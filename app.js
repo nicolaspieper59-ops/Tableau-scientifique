@@ -1,8 +1,53 @@
 // Localisation par défaut (Montpellier)
-let lat = 43.6119, lon = 3.8777;
-
-let maxSpeed = 0;
+let lat = 43.6119, lon = 3.8777
+let maxSpeed = 0
+let speedOn = false;
+let lastFix = null, distanceM = 0, startTime = null, avgSpeed = 0;
 let gpsAvailable = false;
+function initSpeed() {
+  if ('geolocation' in navigator) {
+    gpsAvailable = true;
+    navigator.geolocation.watchPosition(pos => {
+      lat = pos.coords.latitude;
+      lon = pos.coords.longitude;
+
+      if (!speedOn) return;
+
+      const now = Date.now();
+      const sp = pos.coords.speed != null ? pos.coords.speed : null; // m/s
+
+      if (lastFix) {
+        const dt = (now - lastFix.t) / 1000;
+        const d = haversine(lastFix.lat, lastFix.lon, lat, lon);
+        if (d < 1000) distanceM += d;
+        const v = sp != null ? sp : d / dt;
+        const kh = v * 3.6;
+
+        document.getElementById('speed').textContent = kh.toFixed(1);
+        if (kh > maxSpeed) {
+          maxSpeed = kh;
+          document.getElementById('maxSpeed').textContent = maxSpeed.toFixed(1);
+        }
+      }
+
+      lastFix = { lat, lon, t: now };
+
+      if (startTime) {
+        const dur = Math.max(1, (now - startTime)/1000);
+        avgSpeed = (distanceM / dur) * 3.6;
+        document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(1);
+        document.getElementById('distance').textContent = distanceM.toFixed(0);
+        document.getElementById('duration').textContent = Math.floor(dur);
+      }
+    }, err => {
+      gpsAvailable = false;
+      console.warn("GPS indisponible : pas de simulation");
+    }, { enableHighAccuracy:true, maximumAge:2000, timeout:5000 });
+  } else {
+    gpsAvailable = false;
+    console.warn("Pas de géolocalisation disponible");
+  }
+}
 
 
 // Utilitaires
