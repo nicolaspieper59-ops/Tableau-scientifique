@@ -4,6 +4,17 @@ let gpsAvailable = false;
 let speedOn = false;
 let lastFix = null, distanceM = 0, startTime = null, avgSpeed = 0;
 
+document.getElementById('updatePosition').addEventListener('click', () => {
+  const latVal = parseFloat(document.getElementById('latInput').value);
+  const lonVal = parseFloat(document.getElementById('lonInput').value);
+  if (!isNaN(latVal) && !isNaN(lonVal)) {
+    lat = latVal;
+    lon = lonVal;
+    lastFix = { lat, lon, t: Date.now() };
+  }
+});
+
+
 // Bouton Marche/Arrêt
 document.getElementById('speedToggle').addEventListener('click', () => {
   speedOn = !speedOn;
