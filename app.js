@@ -73,7 +73,7 @@ function initSpeed() {
       if (startTime) {
         const dur = Math.max(1, (now - startTime)/1000);
         avgSpeed = (distanceM / dur) * 3.6;
-        document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(1);
+        document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(infinity);
         document.getElementById('distance').textContent = distanceM.toFixed(0);
         document.getElementById('duration').textContent = Math.floor(dur);
       }
