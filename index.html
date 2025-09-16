@@ -101,6 +101,40 @@
 
 </body>
 </html>
+}
+
+    function updateBubbleLevel(position) {
+      const { latitude, longitude, altitude } = position.coords;
+
+      if (lastPosition) {
+        const dx = haversine(lastPosition.lat, lastPosition.lon, latitude, longitude);
+        const dz = altitude - lastPosition.alt;
+        const angle = Math.atan2(dz, dx) * 180 / Math.PI;
+
+        const sensitivity = 2; // 1° = 2 pixels
+        const offsetY = -angle * sensitivity;
+
+        document.getElementById('bubble').style.transform = `translate(0px, ${offsetY}px)`;
+        document.getElementById('angle-display').textContent =
+          `Inclinaison GPS : ${angle.toFixed(4)}°`;
+      }
+
+      lastPosition = { lat: latitude, lon: longitude, alt: altitude };
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(updateBubbleLevel, console.error, {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 5000
+      });
+    } else {
+      document.getElementById('angle-display').textContent = "GPS non disponible";
+    }
+  </script>
+
+</body>
+</html>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
