@@ -49,10 +49,10 @@ function initSpeed() {
         const v = sp != null ? sp : d / dt;
         const kh = v * 3.6;
 
-        document.getElementById('speed').textContent = kh.toFixed(1);
+        document.getElementById('speed').textContent = kh.toFixed(4);
         if (kh > maxSpeed) {
           maxSpeed = kh;
-          document.getElementById('maxSpeed').textContent = maxSpeed.toFixed(1);
+          document.getElementById('maxSpeed').textContent = maxSpeed.toFixed(4);
         }
       }
 
@@ -61,8 +61,8 @@ function initSpeed() {
       if (startTime) {
         const dur = Math.max(1, (now - startTime)/1000);
         avgSpeed = (distanceM / dur) * 3.6;
-        document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(infinity);
-        document.getElementById('distance').textContent = distanceM.toFixed(0);
+        document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(4);
+        document.getElementById('distance').textContent = distanceM.toFixed(4);
         document.getElementById('duration').textContent = Math.floor(dur);
       }
     }, err => {
