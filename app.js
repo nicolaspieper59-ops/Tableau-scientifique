@@ -1,4 +1,4 @@
-let lat = 43.6119, lon = 3.8777;
+let lat = 50.362118, lon =3.283912;
 let maxSpeed = 0;
 let gpsAvailable = false;
 let speedOn = false;
@@ -51,8 +51,8 @@ function initSpeed() {
 
         document.getElementById('speed').textContent = kh.toFixed(4);
         if (kh > maxSpeed) {
-          maxSpeed = kh;
-          document.getElementById('maxSpeed').textContent = maxSpeed.toFixed(4);
+          avgSpeed = kh;
+          document.getElementById('avgSpeed').textContent = maxSpeed.toFixed(4);
         }
       }
 
@@ -61,9 +61,9 @@ function initSpeed() {
       if (startTime) {
         const dur = Math.max(1, (now - startTime)/1000);
         avgSpeed = (distanceM / dur) * 3.6;
-        document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(4);
+        document.getElementById('maxSpeed').textContent = maxSpeed.toFixed(4);
         document.getElementById('distance').textContent = distanceM.toFixed(4);
-        document.getElementById('duration').textContent = Math.floor(dur);
+        document.getElementById('duration').textContent = Math.toFixed(2);
       }
     }, err => {
       gpsAvailable = false;
