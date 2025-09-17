@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MultiTool Scientifique</title>
+  <title>Cockpit Cosmique</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/style.css">
   <script src="js/suncalc.js"></script>
   <script src="sw-register.js"></script>
 </head>
 <body>
   <header>
-    <h1>MultiTool Scientifique 🚀</h1>
+    <h1>Cockpit Cosmique 🚀</h1>
   </header>
 
-  <div class="grid">
+  <div id="cockpit" class="grid">
 
     <!-- Carte Vitesse -->
-    <div class="card">
+    <div class="card module" id="vitessePanel">
       <h2>⚡ Vitesse</h2>
       <p>Instantanée : <span id="speed">0.0000</span> km/h</p>
       <p>Moyenne : <span id="avgSpeed">0.0000</span> km/h</p>
@@ -32,7 +32,7 @@
     </div>
 
     <!-- Soleil & Lune -->
-    <div class="card">
+    <div class="card module" id="soleilLunePanel">
       <h2>☀️🌙 Soleil & Lune</h2>
       <p>Culmination soleil : <span id="sunNoon">--</span></p>
       <p>Heure solaire vraie : <span id="solarTrue">--</span></p>
@@ -46,14 +46,16 @@
     </div>
 
     <!-- Horloge Minecraft -->
-    <div class="card">
+    <div class="card module" id="orbitalPanel">
       <h2>⏰ Horloge Minecraft</h2>
       <canvas id="mcClock" width="140" height="140"></canvas>
-      <div class="digital"><span id="mcHour">00</span>:<span id="mcMinute">00</span>:<span id="mcSecond">00</span></div>
+      <div class="digital">
+        <span id="mcHour">00</span>:<span id="mcMinute">00</span>:<span id="mcSecond">00</span>
+      </div>
     </div>
 
     <!-- Météo -->
-    <div class="card" id="weather-data">
+    <div class="card module" id="meteoPanel">
       <h2>🌡️ Météo</h2>
       <p>Température : <span id="temp">--</span> °C</p>
       <p>Pression : <span id="pressure">--</span> hPa</p>
@@ -68,7 +70,7 @@
     </div>
 
     <!-- Boussole -->
-    <div class="card" id="gps-data">
+    <div class="card module" id="spherePanel">
       <h2>🧭 Boussole</h2>
       <p>Cap : <span id="heading">--</span>°</p>
       <p>Vers lat : <input id="destLat" type="number" step="0.00001" placeholder="43.6119"></p>
@@ -78,7 +80,7 @@
     </div>
 
     <!-- Capteurs -->
-    <div class="card" id="sensor-data">
+    <div class="card module" id="capteursPanel">
       <h2>📐 Capteurs</h2>
       <p>Niveau à bulle : <span id="tilt">--</span>°</p>
       <p>Lumière : <span id="lux">--</span> lux</p>
@@ -86,7 +88,7 @@
     </div>
 
     <!-- Paramètres -->
-    <div class="card">
+    <div class="card" id="parametres">
       <h2>⚙️ Paramètres</h2>
       <label><input type="checkbox" id="toggleGradient"> Gradient cosmique</label>
       <label><input type="checkbox" id="toggleWeather"> Météo simulée</label>
@@ -96,7 +98,14 @@
 
   </div>
 
+  <script src="js/core.js"></script>
+  <script src="js/interface.js"></script>
+  <script src="js/vitesse.js"></script>
+  <script src="js/soleil-lune.js"></script>
+  <script src="js/orbital.js"></script>
+  <script src="js/sphere.js"></script>
+  <script src="js/meteo.js"></script>
+  <script src="js/capteurs.js"></script>
   <script src="app.js"></script>
 </body>
-                            </html>
-  
+                                </html>
