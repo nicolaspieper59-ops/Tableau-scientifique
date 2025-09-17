@@ -1,8 +1,9 @@
-let lat = 50.362118, lon =3.283912;
+let lat = 50.362118, lon = 3.283912;
 let maxSpeed = 0;
 let gpsAvailable = false;
 let speedOn = false;
 let lastFix = null, distanceM = 0, startTime = null, avgSpeed = 0;
+
 // Bouton Marche/Arrêt
 document.getElementById('speedToggle').addEventListener('click', () => {
   speedOn = !speedOn;
@@ -15,7 +16,7 @@ document.getElementById('resetMaxSpeed').addEventListener('click', () => {
   document.getElementById('maxSpeed').textContent = '0';
 });
 
-// Calcul de distance
+// Calcul de distance (Formule de Haversine)
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371000;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -50,26 +51,26 @@ function initSpeed() {
         const kh = v * 3.6;
 
         document.getElementById('speed').textContent = kh.toFixed(4);
+
         if (kh > maxSpeed) {
           maxSpeed = kh;
-          
+          document.getElementById('maxSpeed').textContent = maxSpeed.toFixed(4);
         }
       }
 
       lastFix = { lat, lon, t: now };
 
       if (startTime) {
-        const dur = Math.max(1, (now - startTime)/1000);
+        const dur = Math.max(1, (now - startTime) / 1000);
         avgSpeed = (distanceM / dur) * 3.6;
-        document.getElementById('maxSpeed').textContent = maxSpeed.toFixed(4);
         document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(4);
         document.getElementById('distance').textContent = distanceM.toFixed(4);
-        document.getElementById('duration').textContent = Math.toFixed(2);
+        document.getElementById('duration').textContent = dur.toFixed(2);
       }
     }, err => {
       gpsAvailable = false;
       console.warn("GPS indisponible : pas de simulation");
-    }, { enableHighAccuracy:true, maximumAge:2000, timeout:5000 });
+    }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 });
   } else {
     gpsAvailable = false;
     console.warn("Pas de géolocalisation disponible");
