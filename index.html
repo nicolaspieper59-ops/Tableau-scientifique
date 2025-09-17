@@ -1,15 +1,66 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cockpit Cosmique</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/suncalc.js"></script>
   <script src="sw-register.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: radial-gradient(circle at center, #0d0d2f, #000);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .panel {
+      text-align: center;
+      margin: 2em 0;
+    }
+    .value {
+      font-size: 3em;
+      margin: 0.2em;
+    }
+    .label {
+      font-size: 1.2em;
+      margin-bottom: 0.5em;
+    }
+    .aura {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle, rgba(255,0,255,0.3), transparent);
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      z-index: -1;
+    }
+    /* Pour que le cockpit ne soit pas collé au haut */
+    #cockpit { margin-top: 2em; }
+  </style>
 </head>
 <body>
+  <div class="aura" id="aura"></div>
+
+  <!-- Section Correction de Vitesse Cosmique -->
+  <div class="panel">
+    <div class="label">Vitesse mesurée</div>
+    <div class="value" id="measuredSpeed">--.-- km/h</div>
+
+    <div class="label">Précision estimée</div>
+    <div class="value" id="precision">--%</div>
+
+    <div class="label">Vitesse corrigée (100 %)</div>
+    <div class="value" id="correctedSpeed">--.-- km/h</div>
+  </div>
+
   <header>
     <h1>Cockpit Cosmique 🚀</h1>
   </header>
@@ -98,6 +149,30 @@
 
   </div>
 
+  <script>
+    // Correction de la vitesse cosmique
+    function correctSpeed(measuredSpeed, precisionPercent) {
+      const error = 1 - (precisionPercent / 100);
+      return measuredSpeed / (1 - error);
+    }
+
+    function updateDisplay(measuredSpeed, precisionPercent) {
+      const corrected = correctSpeed(measuredSpeed, precisionPercent);
+      const auraOpacity = Math.max(0, 1 - precisionPercent / 100);
+
+      document.getElementById("measuredSpeed").textContent = `${measuredSpeed.toFixed(2)} km/h`;
+      document.getElementById("precision").textContent = `${precisionPercent.toFixed(0)}%`;
+      document.getElementById("correctedSpeed").textContent = `${corrected.toFixed(2)} km/h`;
+      document.getElementById("aura").style.opacity = auraOpacity.toFixed(2);
+    }
+
+    // Exemple de données simulées
+    const vitesseMesuree = 18.5;       // km/h
+    const precisionEstimee = 92;       // %
+
+    updateDisplay(vitesseMesuree, precisionEstimee);
+  </script>
+
   <script src="js/core.js"></script>
   <script src="js/interface.js"></script>
   <script src="js/vitesse.js"></script>
@@ -108,4 +183,4 @@
   <script src="js/capteurs.js"></script>
   <script src="app.js"></script>
 </body>
-                                </html>
+                                                          </html>
