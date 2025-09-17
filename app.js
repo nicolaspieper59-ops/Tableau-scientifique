@@ -51,7 +51,7 @@ function initSpeed() {
 
         document.getElementById('speed').textContent = kh.toFixed(4);
         if (kh > maxSpeed) {
-          avgSpeed = kh;
+          maxSpeed = kh;
           document.getElementById('maxSpeed').textContent = maxSpeed.toFixed(4);
         }
       }
