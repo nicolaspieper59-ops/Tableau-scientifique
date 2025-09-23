@@ -78,6 +78,8 @@
       <p>% Lumière : <span id="lightPct">0</span>%</p>
       <p>% Son : <span id="soundPct">0</span>%</p>
       <p>Précision GPS : <span id="gpsQuality">--</span>%</p>
+      <p>Compteur Hz : <span id="hzCounter">--</span> Hz</p>
+      <p>Souterrain : <span id="souterrain">--</span></p>
       <button id="speedToggle">Marche/Arrêt</button>
       <button id="resetMaxSpeed">Réinitialiser max</button>
     </div>
@@ -166,6 +168,44 @@
       document.getElementById("aura").style.opacity = auraOpacity.toFixed(2);
     }
 
+    // Compteur Hz (fréquence de rafraîchissement de la vitesse)
+    let speedUpdateCount = 0;
+    let lastHzTimestamp = Date.now();
+
+    function incrementSpeedCounter() {
+      speedUpdateCount++;
+    }
+    function updateHzDisplay() {
+      const now = Date.now();
+      const elapsed = (now - lastHzTimestamp) / 1000; // secondes
+      if (elapsed >= 1) {
+        document.getElementById("hzCounter").textContent = speedUpdateCount;
+        speedUpdateCount = 0;
+        lastHzTimestamp = now;
+      }
+      requestAnimationFrame(updateHzDisplay);
+    }
+    updateHzDisplay();
+
+    // Simule le rafraîchissement de la vitesse (remplacez par votre vraie logique)
+    setInterval(() => {
+      incrementSpeedCounter();
+      // Ici, vous pouvez aussi rafraîchir la vitesse réelle
+    }, 200); // toutes les 200ms (5 Hz)
+
+    // Détection souterrain (exemple basique : luminosité très faible ou GPS imprécis)
+    function updateSouterrain(luxValue, gpsQuality) {
+      // Seuils à ajuster selon votre expérience réelle
+      const isDark = luxValue !== null && luxValue < 5; // Très sombre
+      const isBadGps = gpsQuality !== null && gpsQuality < 30; // GPS peu précis
+      const sousTerrain = (isDark || isBadGps) ? "Oui" : "Non";
+      document.getElementById("souterrain").textContent = sousTerrain;
+    }
+    // Exemple : on simule la lumière et la qualité GPS (remplacez par vos vraies valeurs en production)
+    let fakeLux = 2;      // <5 = sombre
+    let fakeGpsQual = 25; // <30 = mauvais
+    updateSouterrain(fakeLux, fakeGpsQual);
+
     // Exemple de données simulées
     const vitesseMesuree = 18.5;       // km/h
     const precisionEstimee = 92;       // %
@@ -183,4 +223,4 @@
   <script src="js/capteurs.js"></script>
   <script src="app.js"></script>
 </body>
-                                                          </html>
+    </html>
