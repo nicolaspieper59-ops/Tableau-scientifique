@@ -97,3 +97,52 @@ document.addEventListener("DOMContentLoaded", () => {
   // Exemple, à placer là où tu reçois des données capteur/lumière/GPS
   // updateSouterrain(lux, gpsQuality);
 });
+// Ajout dans ton watchPosition
+if (speedOn) {
+  const now = Date.now();
+  const sp = pos.coords.speed != null ? pos.coords.speed : null;
+
+  if (lastFix) {
+    const dt = (now - lastFix.t) / 1000;
+    const d = haversine(lastFix.lat, lastFix.lon, lat, lon);
+    if (d < 1000) distanceM += d;
+    const v = sp != null ? sp : d / dt;
+    const kh = v * 3.6;
+
+    document.getElementById('speed').textContent = kh.toFixed(4);
+
+    // --- Détection mode souterrain ---
+    if (quality <= 60 || kh < 3) {
+      Bus.emit('sensor:vitesseSouterraine', { v: kh, gpsQuality: quality });
+    }
+
+    if (kh > maxSpeed) {
+      maxSpeed = kh;
+      document.getElementById('maxSpeed').textContent = maxSpeed.toFixed(4);
+    }
+  }
+
+  lastFix = { lat, lon, t: now };
+
+  if (startTime) {
+    const dur = Math.max(1, (now - startTime) / 1000);
+    avgSpeed = (distanceM / dur) * 3.6;
+    document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(4);
+    document.getElementById('distance').textContent = distanceM.toFixed(4);
+    document.getElementById('duration').textContent = dur.toFixed(2);
+  }
+}
+
+// --- Invocation poétique ---
+Bus.on('sensor:vitesseSouterraine', ({ v, gpsQuality }) => {
+  if (v > 0) {
+    Bus.emit('ui:halo', { color: '#552200', gain: 0.35 });
+    Bus.emit('audio:play', { id: 'souterrain', vol: 0.5 });
+    logSouterrain('vitesse souterraine', { v, gpsQuality });
+  } else {
+    Bus.emit('ui:halo', { color: '#000000', gain: 0.1 });
+    Bus.emit('audio:play', { id: 'silence', vol: 0.2 });
+    logSouterrain('absence transformée', { gpsQuality });
+  }
+});
+                            
