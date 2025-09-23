@@ -85,3 +85,15 @@ setInterval(() => {
 
 // Démarrage
 initSpeed();
+import { startHzDisplay, incrementSpeedCounter } from './js/vitesse.js';
+import { updateSouterrain } from './js/capteurs.js';
+
+document.addEventListener("DOMContentLoaded", () => {
+  startHzDisplay();
+
+  // Exemple, à placer là où tu reçois des données de vitesse
+  // incrementSpeedCounter();
+
+  // Exemple, à placer là où tu reçois des données capteur/lumière/GPS
+  // updateSouterrain(lux, gpsQuality);
+});
