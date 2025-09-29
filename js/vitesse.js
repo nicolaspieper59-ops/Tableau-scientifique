@@ -32,7 +32,7 @@ function mesurerVitesseGPS() {
 
       updateText('latitude', lat.toFixed(6));
       updateText('longitude', lon.toFixed(6));
-      updateText('altitude', alt.toFixed(2));
+      updateText('altitude', alt.toFixed(6));
 
       if (positionPrecedente) {
         const dt = (now - positionPrecedente.timestamp) / 1000;
@@ -55,7 +55,7 @@ function mesurerVitesseGPS() {
         updateText('distance-sec-lumiere', (distanceTotale / 299792458).toFixed(6));
         updateText('distance-annee-lumiere', (distanceTotale / 9.461e+15).toFixed(12));
         updateText('pourcentage-lumiere', ((vitesse * 1000 / 3600) / 299792458 * 100).toFixed(6));
-        updateText('pourcentage-son', ((vitesse * 1000 / 3600) / 343 * 100).toFixed(2));
+        updateText('pourcentage-son', ((vitesse * 1000 / 3600) / 343 * 100).toFixed(4));
 
         const x = Math.floor(distanceTotale);
         updateText('coords-minecraft', `X:${x} Y:64 Z:0`);
