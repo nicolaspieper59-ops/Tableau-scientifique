@@ -1,165 +1,106 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cockpit Cosmique Universel</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icons/icon-192.png" />
-  <style>
-    :root { color-scheme: dark; }
-    body { margin: 0; font-family: system-ui, sans-serif; background: #0a0a0f; color: #ddd; }
-    header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #222; }
-    header .actions { display:flex; gap:8px; }
-    main { padding:16px; display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-    .card { background:#121219; border:1px solid #1f1f2a; border-radius:12px; padding:12px; box-shadow: 0 0 20px rgba(0,0,0,.25); }
-    h3 { margin:0 0 8px; font-weight:600; color:#aaf; }
-    .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-    button { background:#1c1c29; color:#eaeaf6; border:1px solid #2a2a3a; border-radius:8px; padding:8px 12px; cursor:pointer; }
-    button:hover { background:#25253a; }
-    canvas { width:100%; height:220px; background:#0d0d14; border-radius:8px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .hidden { display:none; }
-    .metric { display:flex; justify-content:space-between; padding:4px 0; }
-    .metric strong { color:#9cf; }
-    footer { padding:16px; text-align:center; color:#888; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Médaillon Cosmique Universel</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <div class="mono">⚡ Cockpit Cosmique Universel ⚡</div>
-    <div class="actions">
-      <button id="btnAmbient">Ambiance</button>
-      <button id="btnExport">Exporter journal</button>
-      <button id="btnInstall" class="hidden">Installer</button>
-    </div>
-  </header>
+  <main id="cockpit-cosmique">
 
-  <main>
-    <!-- Vitesse / GPS -->
-    <section class="card">
-      <h3>⏱️ Vitesse & Temps</h3>
-      <div class="metric"><strong>Instantanée:</strong> <span id="speed">-- km/h</span></div>
-      <div class="metric"><strong>Moyenne:</strong> <span id="avgSpeed">-- km/h</span></div>
-      <div class="metric"><strong>Max:</strong> <span id="maxSpeed">-- km/h</span></div>
-      <div class="metric"><strong>Durée:</strong> <span id="duration">-- s</span></div>
-      <div class="metric"><strong>Distance:</strong> <span id="distance">-- m</span></div>
-      <div class="metric"><strong>% Lumière:</strong> <span id="pourcentage-lumiere">--%</span></div>
-      <div class="metric"><strong>% Son:</strong> <span id="pourcentage-son">--%</span></div>
-      <div class="metric"><strong>Précision GPS:</strong> <span id="gpsQuality">--%</span></div>
-      <div class="row">
-        <button id="speedToggle">Marche/Arrêt</button>
-        <button id="resetMaxSpeed">Réinitialiser max</button>
-      </div>
+    <section id="vitesse-section">
+      <h2>⏱️ Temps & Vitesse</h2>
+      <div>Temps : <span id="temps">0.00 s</span></div>
+      <div>Vitesse instantanée : <span id="vitesse-instantanee">-- km/h</span></div>
+      <div>Vitesse moyenne : <span id="vitesse-moyenne">-- km/h</span></div>
+      <div>Vitesse max : <span id="vitesse-max">-- km/h</span></div>
+      <div>Vitesse : <span id="vitesse-m-s">-- m/s</span> | <span id="vitesse-mm-s">-- mm/s</span></div>
+      <div>% Lumière : <span id="pourcentage-lumiere">--%</span></div>
+      <div>% Son : <span id="pourcentage-son">--%</span></div>
+      <div>Distance : <span id="distance-km">-- km</span> | <span id="distance-m">-- m</span> | <span id="distance-mm">-- mm</span></div>
+      <div>Distance cosmique : <span id="distance-sl">-- s lumière</span> | <span id="distance-al">-- al</span></div>
+      <div>Précision GPS : <span id="precision-gps">--%</span></div>
+      <button onclick="toggleMarche()">Marche/Arrêt</button>
+      <button onclick="reinitialiserVitesseMax()">Réinitialiser max</button>
     </section>
 
-    <!-- Monde souterrain -->
-    <section class="card">
-      <h3>🌋 Monde souterrain</h3>
-      <div class="metric"><strong>Vitesse souterraine:</strong> <span id="vSub">-- km/h</span></div>
-      <div class="metric"><strong>Propagation tellurique:</strong> <span id="vWave">-- m/s</span></div>
-      <div class="metric"><strong>Flux enfoui:</strong> <span id="vFlux">-- m/h</span></div>
-      <div class="metric"><strong>Vitesse d’oubli:</strong> <span id="vMemoire">--%</span></div>
+    <section id="astronomie-section">
+      <h2>☀️🌙 Soleil & Lune</h2>
+      <div>Culmination soleil : <span id="culmination-soleil">--</span></div>
+      <div>Heure solaire vraie : <span id="heure-solaire-vraie">--</span></div>
+      <div>Heure solaire moyenne : <span id="heure-solaire-moyenne">--</span></div>
+      <div>Équation du temps : <span id="equation-temps">--</span></div>
+      <div>Lune phase : <span id="lune-phase">--%</span></div>
+      <div>Lune magnitude : <span id="lune-magnitude">--</span></div>
+      <div>Lever lune : <span id="lever-lune">--</span></div>
+      <div>Coucher lune : <span id="coucher-lune">--</span></div>
+      <div>Culmination lune : <span id="culmination-lune">--</span></div>
     </section>
 
-    <!-- Soleil & Lune -->
-    <section class="card">
-      <h3>☀️🌙 Soleil & Lune</h3>
-      <div class="metric"><strong>Culmination soleil:</strong> <span id="culSol">--</span></div>
-      <div class="metric"><strong>Heure solaire vraie:</strong> <span id="solVraie">--</span></div>
-      <div class="metric"><strong>Heure solaire moyenne:</strong> <span id="solMoy">--</span></div>
-      <div class="metric"><strong>Équation du temps:</strong> <span id="eqTemps">--</span></div>
-      <div class="metric"><strong>Phase lune:</strong> <span id="lunePhase">--%</span></div>
-      <div class="metric"><strong>Magnitude lune:</strong> <span id="luneMag">--</span></div>
-      <div class="metric"><strong>Lever lune:</strong> <span id="luneLever">--</span></div>
-      <div class="metric"><strong>Coucher lune:</strong> <span id="luneCoucher">--</span></div>
-      <div class="metric"><strong>Culmination lune:</strong> <span id="luneCul">--</span></div>
+    <section id="horloge-section">
+      <h2>⏰ Horloge Minecraft</h2>
+      <div id="horloge-minecraft">00:00:00</div>
     </section>
 
-    <!-- Horloge Minecraft -->
-    <section class="card">
-      <h3>⏰ Horloge Minecraft</h3>
-      <div id="horloge-minecraft" class="mono">00:00:00</div>
+    <section id="meteo-section">
+      <h2>🌡️ Météo</h2>
+      <div>Température : <span id="temperature">-- °C</span></div>
+      <div>Pression : <span id="pression">-- hPa</span></div>
+      <div>Humidité : <span id="humidite">--%</span></div>
+      <div>Vent : <span id="vent">-- km/h</span></div>
+      <div>Nuages : <span id="nuages">--%</span></div>
+      <div>Pluie : <span id="pluie">-- mm</span></div>
+      <div>Neige : <span id="neige">-- mm</span></div>
+      <div>Indice UV : <span id="indice-uv">--</span></div>
+      <div>Qualité air : <span id="qualite-air">--</span></div>
+      <div>Point d’ébullition : <span id="point-ebullition">-- °C</span></div>
     </section>
 
-    <!-- Météo -->
-    <section class="card">
-      <h3>🌡️ Météo</h3>
-      <div class="metric"><strong>Température:</strong> <span id="meteoTemp">-- °C</span></div>
-      <div class="metric"><strong>Pression:</strong> <span id="meteoPress">-- hPa</span></div>
-      <div class="metric"><strong>Humidité:</strong> <span id="meteoHum">--%</span></div>
-      <div class="metric"><strong>Vent:</strong> <span id="meteoVent">-- km/h</span></div>
-      <div class="metric"><strong>Nuages:</strong> <span id="meteoCloud">--%</span></div>
-      <div class="metric"><strong>Pluie:</strong> <span id="meteoRain">-- mm</span></div>
-      <div class="metric"><strong>Neige:</strong> <span id="meteoSnow">-- mm</span></div>
-      <div class="metric"><strong>Indice UV:</strong> <span id="meteoUV">--</span></div>
-      <div class="metric"><strong>Qualité air:</strong> <span id="meteoAir">--</span></div>
-      <div class="metric"><strong>Point d’ébullition:</strong> <span id="meteoBoil">-- °C</span></div>
+    <section id="orientation-section">
+      <h2>🧭 Boussole</h2>
+      <div>Cap : <span id="cap">--°</span></div>
+      <div>Vers lat : <span id="latitude">--</span></div>
+      <div>Vers lon : <span id="longitude">--</span></div>
+      <div>Cap vers destination : <span id="cap-destination">--°</span></div>
+      <button onclick="allerVersDestination()">Aller</button>
     </section>
 
-    <!-- Orientation -->
-    <section class="card">
-      <h3>🧭 Orientation</h3>
-      <div class="metric"><strong>Cap:</strong> <span id="cap">--°</span></div>
-      <div class="metric"><strong>Latitude:</strong> <span id="latitude">--</span></div>
-      <div class="metric"><strong>Longitude:</strong> <span id="longitude">--</span></div>
-      <div class="metric"><strong>Cap vers destination:</strong> <span id="cap-destination">--°</span></div>
-      <div class="row"><button onclick="allerVersDestination()">Aller</button></div>
+    <section id="capteurs-section">
+      <h2>📐 Capteurs</h2>
+      <div>Niveau à bulle : <span id="niveau-bulle">--°</span></div>
+      <div>Lumière : <span id="lumiere">-- lux</span></div>
+      <div>Son : <span id="son">-- dB</span></div>
+      <div>Fréquence : <span id="frequence-son">-- Hz</span></div>
     </section>
 
-    <!-- Capteurs -->
-    <section class="card">
-      <h3>📐 Capteurs</h3>
-      <div class="metric"><strong>Niveau à bulle:</strong> <span id="niveau-bulle">--°</span></div>
-      <div class="metric"><strong>Lumière:</strong> <span id="lumiere">-- lux</span></div>
-      <div class="metric"><strong>Son:</strong> <span id="son">-- dB</span></div>
-      <div class="metric"><strong>Fréquence:</strong> <span id="frequence-son">-- Hz</span></div>
+    <section id="tableau-brut">
+      <h2>📊 Vue brute GPS</h2>
+      <div>Latitude : <span id="brut-latitude">--</span></div>
+      <div>Longitude : <span id="brut-longitude">--</span></div>
+      <div>Altitude : <span id="brut-altitude">--</span></div>
+      <div>Précision GPS : <span id="brut-precision">--</span></div>
+      <div>Lumière : <span id="brut-lux">--</span></div>
+      <div>Souterrain : <span id="brut-souterrain">--</span></div>
     </section>
 
-    <!-- Visualisation orbitale -->
-    <section class="card">
-      <h3>🌀 Visualisation orbitale</h3>
-      <canvas id="canvasOrbit"></canvas>
-    </section>
-
-    <!-- Journaux -->
-    <section class="card">
-      <h3>📜 Journal rituel</h3>
-      <div id="log" class="mono"></div>
-      <div class="row"><button id="btnExport">Exporter JSON</button></div>
-    </section>
-
-    <section class="card">
-      <h3>📓 Journal souterrain</h3>
-      <div id="logSouterrain" class="mono"></div>
-      <div class="row">
-        <button onclick="exportJournalSouterrain()">Exporter</button>
-        <button onclick="rejouerJournalSouterrain()">Rejouer</button>
-      </div>
-    </section>
-
-    <!-- Visualisations -->
-    <section class="card">
-      <h3>🪨 Visualisation souterraine</h3>
-      <canvas id="canvasSouterrain"></canvas>
-      <div class="row"><button onclick="dessinerJournalSouterrain()">Visualiser</button></div>
-    </section>
-
-    <section class="card">
-      <h3>🪐 Archéologie cosmique</h3>
-      <input type="file" id="importStrate" accept=".json" />
-      <div class="row">
-        <button onclick="fusionnerStrates()">Fusionner</button>
-        <button onclick="visualiserStrates()">Visualiser</button>
-      </div>
-      <canvas id="canvasStrates"></canvas>
-    </section>
   </main>
 
-  <footer>© Ton univers — du noyau à la couronne</footer>
+  <script type="module">
+    import { boucleCosmique, collecterCapteurs, toggleMarche, reinitialiserVitesseMax } from './js/medaillonUniversel.js';
+    import { updateTableauBrut } from './js/tableauBrut.js';
 
-  <!-- Ici tu peux réinjecter tes <script> du deuxième fichier pour GPS, PWA, journaux, visualisations -->
-  <script src="./js/app-universel.js" type="module"></script>
+    window.toggleMarche = toggleMarche;
+    window.reinitialiserVitesseMax = reinitialiserVitesseMax;
+    window.allerVersDestination = () => console.log("🧭 Cap vers destination activé");
+
+    setInterval(() => {
+      collecterCapteurs().then(capteurs => {
+        boucleCosmique(capteurs);
+        updateTableauBrut(capteurs.gps, capteurs.lumiere);
+      });
+    }, 1000);
+  </script>
 </body>
   </html>
-                            
+  
