@@ -50,7 +50,7 @@ function mesurerVitesseGPS() {
         updateText('distance', distanceTotale.toFixed(4));
         updateText('temps', tempsTotal.toFixed(2));
 
-        updateText('vitesse-mm', (vitesse * 1000000 / 3600).toFixed(0));
+        updateText('vitesse-mm', (vitesse * 1000000 / 3600).toFixed(2));
         updateText('distance-km', (distanceTotale / 1000).toFixed(4));
         updateText('distance-sec-lumiere', (distanceTotale / 299792458).toFixed(6));
         updateText('distance-annee-lumiere', (distanceTotale / 9.461e+15).toFixed(12));
